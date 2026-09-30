@@ -1,0 +1,4 @@
+interface:
+  display_name: "Domain Language"
+  short_description: "Keep business terms and code aligned"
+  default_prompt: "Use $domain-language to establish and maintain a shared domain vocabulary for this project."

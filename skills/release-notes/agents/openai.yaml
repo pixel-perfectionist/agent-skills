@@ -1,0 +1,6 @@
+interface:
+  display_name: "Release Notes"
+  short_description: "Build a business-readable release digest for Decipher"
+  default_prompt: "Use $release-notes to prepare Decipher release notes for the last seven days."
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI ping pong"
+  short_description: "Review a plan with Claude and Codex until agreement"
+  default_prompt: "Use $ai-ping-pong to review the plan with Claude and Codex until both approve."
+policy:
+  allow_implicit_invocation: true

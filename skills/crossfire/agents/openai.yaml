@@ -1,0 +1,6 @@
+interface:
+  display_name: "Crossfire"
+  short_description: "Debate decisions through contrasting AI perspectives"
+  default_prompt: "Use $crossfire to debate this decision and recommend the next step."
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,473 @@
+<title>Decipher Release Notes, Sep 14–28</title>
+<meta name="description" content="What changed in Decipher between <start> and <end>, sorted by impact, with stage screenshots.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@600;700&display=swap">
+<style>
+  :root {
+    --bg: #f4f5f8;
+    --surface: #ffffff;
+    --ink: #161b27;
+    --ink-2: #4c5466;
+    --ink-3: #6b7385;
+    --line: #dce0e7;
+    --brand: #333f5b;
+    --brand-soft: #e7eaf1;
+    --accent: #b8531a;
+    --accent-soft: #fbeadc;
+    --good: #2b6e4e;
+    --good-soft: #e0f0e7;
+    --chip: #eef0f3;
+    --shadow: 0 1px 2px rgba(22, 27, 39, 0.06), 0 8px 24px rgba(22, 27, 39, 0.06);
+    --overlay: rgba(12, 15, 22, 0.86);
+    --heading: "Montserrat", "Helvetica Neue", Arial, sans-serif;
+    --body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0f1218;
+      --surface: #171b23;
+      --ink: #e9ecf1;
+      --ink-2: #aab2c0;
+      --ink-3: #8d96a6;
+      --line: #2a303b;
+      --brand: #a9b8e3;
+      --brand-soft: #232b3d;
+      --accent: #f29a5f;
+      --accent-soft: #3a2518;
+      --good: #74cfa1;
+      --good-soft: #193127;
+      --chip: #222834;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0f1218;
+    --surface: #171b23;
+    --ink: #e9ecf1;
+    --ink-2: #aab2c0;
+    --ink-3: #8d96a6;
+    --line: #2a303b;
+    --brand: #a9b8e3;
+    --brand-soft: #232b3d;
+    --accent: #f29a5f;
+    --accent-soft: #3a2518;
+    --good: #74cfa1;
+    --good-soft: #193127;
+    --chip: #222834;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 15.5px/1.6 var(--body);
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    padding-inline: 20px;
+    padding-block: 40px 72px;
+  }
+  h1, h2, h3, h4 { font-family: var(--heading); color: var(--ink); text-wrap: balance; margin: 0; }
+  h1 { font-size: clamp(28px, 4.4vw, 42px); line-height: 1.12; letter-spacing: -0.01em; font-weight: 700; }
+  h2 { font-size: clamp(21px, 2.6vw, 26px); line-height: 1.2; font-weight: 700; }
+  h3 { font-size: 19px; line-height: 1.3; font-weight: 600; }
+  h4 { font-size: 15px; font-weight: 600; }
+  p { margin: 0; }
+  a { color: var(--brand); text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: 6px; }
+
+  /* Header */
+  .eyebrow {
+    font: 600 12px/1 var(--body);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  header.top { display: grid; gap: 14px; }
+  .lead { font-size: 17px; line-height: 1.55; color: var(--ink-2); max-width: 68ch; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13.5px; color: var(--ink-3); }
+  .meta strong { color: var(--ink-2); font-weight: 600; }
+
+  .glance {
+    margin-top: 28px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px 24px;
+    box-shadow: var(--shadow);
+    display: grid;
+    gap: 12px;
+  }
+  .glance ul { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+  .glance li::marker { color: var(--accent); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; align-items: center; font-size: 13px; color: var(--ink-3); }
+
+  nav.toc { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+  nav.toc a {
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink-2);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 12px;
+  }
+  nav.toc a:hover { color: var(--ink); border-color: var(--ink-3); }
+
+  /* Tags */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font: 600 11.5px/1 var(--body);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 6px 9px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+  .tag.change { color: var(--accent); background: var(--accent-soft); }
+  .tag.new { color: var(--brand); background: var(--brand-soft); }
+  .tag.access { color: var(--good); background: var(--good-soft); }
+  .tag.plain { color: var(--ink-2); background: var(--chip); }
+  .tag.progress { color: var(--ink-2); background: transparent; border: 1px dashed var(--ink-3); padding: 5px 8px; }
+
+  /* Sections */
+  section.block { margin-top: 56px; display: grid; gap: 22px; }
+  .block-head { display: grid; gap: 8px; border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+  .block-head p { color: var(--ink-2); max-width: 70ch; }
+
+  article.change {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 24px;
+    display: grid;
+    gap: 14px;
+    box-shadow: var(--shadow);
+  }
+  .change-head { display: grid; gap: 10px; justify-items: start; }
+  .change p.summary { max-width: 72ch; }
+  .notice-label {
+    font: 600 12px/1 var(--body);
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  article.change ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 76ch; }
+  article.change li { color: var(--ink); }
+  .heads-up {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    padding: 10px 14px;
+    border-radius: 0 8px 8px 0;
+    font-size: 14.5px;
+    max-width: 76ch;
+  }
+  .heads-up strong { color: var(--accent); }
+
+  .shots { display: grid; gap: 14px; }
+  .shots.two { grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); align-items: start; }
+  .shots.pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  figure.shot { margin: 0; display: grid; gap: 8px; }
+  figure.shot button {
+    all: unset;
+    cursor: zoom-in;
+    display: block;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--chip);
+  }
+  figure.shot button:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; }
+  figure.shot img { display: block; width: 100%; height: auto; max-width: 100%; }
+  figcaption { font-size: 13px; line-height: 1.5; color: var(--ink-3); }
+
+  .foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    align-items: baseline;
+    padding-top: 12px;
+    border-top: 1px dashed var(--line);
+    font-size: 13.5px;
+  }
+  .try { font-weight: 600; }
+  .prs { font: 12.5px/1.6 var(--mono); color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+  .list-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px 24px;
+    box-shadow: var(--shadow);
+    display: grid;
+    gap: 12px;
+  }
+  .list-card ul { margin: 0; padding-left: 20px; display: grid; gap: 9px; }
+  .list-card .prs { margin-left: 4px; }
+  .rollout { border-color: var(--accent); }
+  .rollout h3 { color: var(--accent); }
+
+  .progress-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .progress-card {
+    border: 1px dashed var(--ink-3);
+    border-radius: 12px;
+    padding: 18px;
+    display: grid;
+    gap: 8px;
+    align-content: start;
+    background: var(--surface);
+  }
+  .progress-card p { font-size: 14.5px; color: var(--ink-2); }
+
+  details.appendix {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 22px;
+  }
+  details.appendix summary { cursor: pointer; font: 600 16px var(--heading); }
+  .pr-group { margin-top: 18px; }
+  .pr-group h4 { display: flex; gap: 8px; align-items: baseline; }
+  .pr-group .count { font: 500 12px var(--body); color: var(--ink-3); }
+  .pr-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; font-size: 13.5px; }
+  .pr-list li { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 10px; align-items: baseline; padding: 3px 0; border-bottom: 1px solid var(--line); }
+  .pr-list a { font: 12.5px var(--mono); text-decoration: none; font-variant-numeric: tabular-nums; }
+  .pr-list time { font-size: 12px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+  footer.end { margin-top: 48px; font-size: 13px; color: var(--ink-3); }
+
+  /* Lightbox */
+  [hidden] { display: none !important; }
+  #lightbox {
+    position: fixed;
+    inset: 0;
+    background: var(--overlay);
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    z-index: 50;
+    cursor: zoom-out;
+  }
+  #lightbox img { max-width: 100%; max-height: 100%; border-radius: 8px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); }
+  #lightbox .hint { position: fixed; top: calc(env(safe-area-inset-top, 0px) + 12px); right: 16px; color: #fff; font-size: 13px; opacity: 0.8; }
+
+  @media (max-width: 720px) {
+    .wrap { padding-inline: 16px; padding-block: 28px 56px; }
+    article.change, .glance, .list-card { padding: 18px 16px; }
+    .shots.two, .shots.pair { grid-template-columns: minmax(0, 1fr); }
+    .pr-list li { grid-template-columns: 52px minmax(0, 1fr); }
+    .pr-list time { display: none; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    nav.toc a, figure.shot button { transition: border-color 0.15s ease; }
+  }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+
+<!--
+  release-notes template. Copy to $SCRATCH/notes/page.src.html and replace the
+  example content. Rules: references/content-guide.md.
+  - Images: put files in img/ and point each <img> src at img/NAME.jpg (build.py bundle inlines them).
+  - Tags: .tag.change (Changes how you work), .tag.new, .tag.access, .tag.progress.
+  - Figures: .shots (one wide), .shots.two (wide + narrow), .shots.pair (two equal).
+  - Keep the APPENDIX marker in the details section; build.py bundle fills it.
+-->
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">Decipher · Product update for the business team</span>
+    <h1>What changed in Decipher, Sep 14–28</h1>
+    <p class="lead">The team merged N pull requests in <period>. Most of that work is invisible, so this page covers what users and admins will notice, biggest changes first. Screenshots are from stage, in the Decipher Demo Company.</p>
+    <div class="meta">
+      <span><strong>Prepared</strong> <date></span>
+      <span><strong>Try it</strong> <a href="https://stage.decipherip.ai">stage.decipherip.ai</a></span>
+      <span><strong>Tip</strong> click any screenshot to enlarge it</span>
+    </div>
+  </header>
+
+  <div class="glance">
+    <h2>At a glance</h2>
+    <ul>
+      <li><strong>Bold one-line claim.</strong> One plain sentence that explains it.</li>
+      <!-- 5–7 bullets -->
+    </ul>
+  </div>
+
+  <div class="legend">
+    <span class="tag change">Changes how you work</span>
+    <span class="tag new">New</span>
+    <span class="tag access">Access &amp; security</span>
+    <span class="tag progress">In progress</span>
+  </div>
+
+  <nav class="toc" aria-label="Sections">
+    <a href="#changes">Changes how you work</a>
+    <a href="#new">New capabilities</a>
+    <a href="#access">Access &amp; security</a>
+    <a href="#speed">Faster and sturdier</a>
+    <a href="#progress">In progress this week</a>
+    <a href="#rollout">Before this reaches customers</a>
+    <a href="#all">All N pull requests</a>
+  </nav>
+
+  <section class="block" id="changes">
+    <div class="block-head">
+      <h2>Changes how you work</h2>
+      <p>These change existing screens or rules. Expect questions from people who learned the old way.</p>
+    </div>
+
+    <!-- One article per feature. Repeat. -->
+    <article class="change" id="example-change">
+      <div class="change-head">
+        <span class="tag change">Changes how you work</span>
+        <h3>Title that states the outcome</h3>
+      </div>
+      <p class="summary">Two or three sentences: what it is and why it matters.</p>
+      <span class="notice-label">What you'll notice</span>
+      <ul>
+        <li>A concrete, observable fact.</li>
+        <li>Another one.</li>
+      </ul>
+      <p class="heads-up"><strong>Heads-up:</strong> the one thing that will confuse people.</p>
+      <div class="shots two">
+        <figure class="shot">
+          <button type="button" data-zoom><img src="img/example-wide.jpg" alt="Describe the screen" width="1788" height="1330" loading="lazy"></button>
+          <figcaption>Name the record and say what to look at.</figcaption>
+        </figure>
+        <figure class="shot">
+          <button type="button" data-zoom><img src="img/example-narrow.jpg" alt="Describe the detail" width="600" height="950" loading="lazy"></button>
+          <figcaption>The detail that matters.</figcaption>
+        </figure>
+      </div>
+      <div class="foot">
+        <a class="try" href="https://stage.decipherip.ai/">Try it on stage → where › what to click</a>
+        <span class="prs">#1234 #1240</span>
+      </div>
+    </article>
+
+    <!-- A list card for rule changes that need no screenshot. -->
+    <article class="change" id="example-rules">
+      <div class="change-head">
+        <span class="tag change">Changes how you work</span>
+        <h3>Stricter rules for admins</h3>
+      </div>
+      <ul>
+        <li>One rule per bullet. <span class="prs">#1234</span></li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="block" id="new">
+    <div class="block-head">
+      <h2>New capabilities</h2>
+      <p>New things to try. None of them removes anything people rely on today.</p>
+    </div>
+    <!-- article.change items with <span class="tag new">New</span> -->
+    <div class="list-card" id="smaller">
+      <h3>Smaller additions</h3>
+      <ul>
+        <li>One line each. <span class="prs">#1234</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="block" id="access">
+    <div class="block-head">
+      <h2>Access &amp; security</h2>
+      <p>Mostly invisible, but it decides what a person with limited access can see.</p>
+    </div>
+    <div class="list-card">
+      <ul>
+        <li><strong>Lead with the user-visible effect.</strong> Then the detail. <span class="prs">#1234</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="block" id="speed">
+    <div class="block-head">
+      <h2>Faster and sturdier</h2>
+    </div>
+    <div class="list-card">
+      <p>One paragraph for performance, logging and clean-up work. <span class="prs">#1234–#1250</span></p>
+    </div>
+  </section>
+
+  <section class="block" id="progress">
+    <div class="block-head">
+      <h2>In progress this week</h2>
+      <p>Not on stage yet, or only as a prototype.</p>
+    </div>
+    <div class="progress-grid">
+      <div class="progress-card">
+        <span class="tag progress">In progress</span>
+        <h3>Work item</h3>
+        <p>One or two sentences. <span class="prs">#1234</span></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="rollout">
+    <div class="block-head">
+      <h2>Before this reaches customers</h2>
+      <p>Decisions and checks for beta and production.</p>
+    </div>
+    <div class="list-card rollout">
+      <h3>Please review</h3>
+      <ul>
+        <li><strong>Topic.</strong> What happens, and what to do before release.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="block" id="all">
+    <details class="appendix">
+      <summary>All N pull requests merged <period>, by area</summary>
+      <!--APPENDIX-->
+    </details>
+  </section>
+
+  <footer class="end">Sources: merged pull requests in DecipherIP/decipher, <period>. Screenshots: stage data (<Company>).</footer>
+</div>
+
+<div id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Enlarged screenshot">
+  <span class="hint">Click or press Esc to close</span>
+  <img alt="">
+</div>
+
+<script>
+  (function () {
+    var box = document.getElementById('lightbox');
+    var big = box.querySelector('img');
+    var last = null;
+    document.querySelectorAll('[data-zoom]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var img = btn.querySelector('img');
+        big.src = img.currentSrc || img.src;
+        big.alt = img.alt;
+        last = btn;
+        box.hidden = false;
+      });
+    });
+    function close() {
+      box.hidden = true;
+      big.removeAttribute('src');
+      if (last) last.focus();
+    }
+    box.addEventListener('click', close);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !box.hidden) close();
+    });
+  })();
+</script>
