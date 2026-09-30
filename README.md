@@ -1,6 +1,6 @@
 # Agent Skills
 
-A collection of skills for Claude Code and Codex: debate decisions, review plans with two models, maintain a shared domain language, and prepare business-readable release notes.
+A collection of skills for Claude Code and Codex: debate decisions, review plans with two models, maintain a shared domain language, apply pragmatic TypeScript/JavaScript practices, and prepare business-readable release notes.
 
 ## Skills in this collection
 
@@ -9,9 +9,10 @@ A collection of skills for Claude Code and Codex: debate decisions, review plans
 | [Crossfire](skills/crossfire/SKILL.md) | Debate a decision through contrasting perspectives and synthesize a recommendation. |
 | [AI ping pong](skills/ai-ping-pong/SKILL.md) | Run the separately requested Claude–Codex plan review loop. |
 | [Domain Language](skills/domain-language/SKILL.md) | Keep business discussions, the domain glossary, and implementation aligned. |
+| [Pragmatic Engineering](skills/pragmatic-engineering/SKILL.md) | Apply practical TypeScript/JavaScript engineering with clear contracts, observable failures, and project-first conventions. |
 | [Release Notes](skills/release-notes/SKILL.md) | Build a business-readable HTML digest from merged PRs, with screenshots and a full appendix. Currently configured for Decipher. |
 
-Domain Language and Release Notes are independently usable. The two-stage flow below describes Crossfire and AI ping pong.
+Domain Language, Pragmatic Engineering, and Release Notes are independently usable. The two-stage flow below describes Crossfire and AI ping pong.
 
 ## Crossfire and AI ping pong
 
@@ -50,7 +51,7 @@ The diagram shows Crossfire's Full mode. Quick mode handles simple decisions; Bl
 
 ## Install
 
-Crossfire and Domain Language require a Claude Code or Codex host that supports skills. For Crossfire, real isolated subagents are preferred; when they are unavailable, the skill requires disclosure that its perspectives are simulated in one context. Domain Language has no helper runtime or second-provider CLI requirement.
+Crossfire, Domain Language, and Pragmatic Engineering require a Claude Code or Codex host that supports skills. For Crossfire, real isolated subagents are preferred; when they are unavailable, the skill requires disclosure that its perspectives are simulated in one context. Domain Language and Pragmatic Engineering have no helper runtime or second-provider CLI requirement.
 
 AI ping pong additionally requires:
 
@@ -70,7 +71,7 @@ git clone https://github.com/pixel-perfectionist/agent-skills.git
 cd agent-skills
 
 mkdir -p "$HOME/.agents/skills" "$HOME/.claude/skills"
-for skill_name in crossfire ai-ping-pong domain-language release-notes; do
+for skill_name in crossfire ai-ping-pong domain-language pragmatic-engineering release-notes; do
   for skills_directory in "$HOME/.agents/skills" "$HOME/.claude/skills"; do
     skill_target="$skills_directory/$skill_name"
     if [ -e "$skill_target" ] || [ -L "$skill_target" ]; then
@@ -124,6 +125,20 @@ $domain-language Audit this feature against our domain glossary.
 ```
 
 When establishing the workflow, it adds concise glossary links to the project's existing agent instructions. Audit requests produce findings without edits. Unresolved business rules remain open questions, and creating a glossary does not imply a repository-wide rename. See the [skill](skills/domain-language/SKILL.md) and [glossary guide with DDD references](skills/domain-language/references/glossary-and-adoption.md).
+
+## Pragmatic Engineering
+
+Apply a practical engineering style to TypeScript and JavaScript changes: clear contracts, validated input, explicit failure behavior, and the smallest design that fully solves the problem. The current project's conventions and runtime constraints take precedence. No particular library, runner, architecture, or JavaScript-to-TypeScript migration is required.
+
+```text
+# In Claude Code
+/pragmatic-engineering Implement this change using the project's existing conventions.
+
+# In Codex
+$pragmatic-engineering Review this change for correctness and unnecessary complexity.
+```
+
+Invoke the skill explicitly; ordinary coding and review requests do not activate it. Claude Code frontmatter and Codex discovery metadata both disable automatic invocation. The [core guidance](skills/pragmatic-engineering/SKILL.md) covers everyday work, while the [architecture reference](skills/pragmatic-engineering/references/architecture.md) describes optional patterns and their limits. Invoking the style does not by itself authorize commits, deployment, or publication.
 
 ## Release Notes
 
@@ -222,6 +237,10 @@ skills/
     SKILL.md                 Establish, apply, or audit shared domain language
     agents/openai.yaml       Codex discovery metadata
     references/glossary-and-adoption.md
+  pragmatic-engineering/
+    SKILL.md                 Explicitly requested TypeScript/JavaScript style
+    agents/openai.yaml       Explicit-only Codex discovery metadata
+    references/architecture.md
   release-notes/
     SKILL.md                 Existing Decipher release-notes workflow
     agents/openai.yaml       Explicit-only Codex discovery metadata

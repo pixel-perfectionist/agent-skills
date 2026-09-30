@@ -1,0 +1,6 @@
+interface:
+  display_name: "Pragmatic Engineering"
+  short_description: "Pragmatic TypeScript and JavaScript engineering"
+  default_prompt: "Use $pragmatic-engineering to complete this TypeScript or JavaScript task with clear contracts, explicit failures, and the project's existing conventions."
+policy:
+  allow_implicit_invocation: false
