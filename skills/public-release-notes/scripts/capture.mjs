@@ -37,8 +37,9 @@ const page = ctx.pages()[0] ?? (await ctx.newPage());
 const STYLE = `
   nextjs-portal { display: none !important; }
   *, *::before, *::after { transition: none !important; animation: none !important; caret-color: transparent !important; }
-  .rn-highlight { outline: 2px solid rgb(14 165 233) !important; outline-offset: 4px !important; border-radius: 10px; }
 `;
+const RING_OFFSET = 6;
+const highlights = [];
 
 await page.goto(`${BASE}/api/auth/dev-login`, { waitUntil: 'domcontentloaded' });
 const login = await page.evaluate(async (key) => {
@@ -98,7 +99,8 @@ for (const s of steps) {
   } else if (s.op === 'escape') {
     await page.keyboard.press('Escape');
   } else if (s.op === 'highlight') {
-    await locate(s.target).evaluate((el) => el.classList.add('rn-highlight'));
+    // Recorded for the next shot only, then forgotten.
+    highlights.push(s.target);
   } else if (s.op === 'shot') {
     await page.mouse.move(1, 1);
     await page.evaluate(() => document.activeElement?.blur?.());
@@ -106,14 +108,52 @@ for (const s of steps) {
     // including inside a scrolling rail.
     await locate(s.targets[0]).evaluate((el) => el.scrollIntoView({ block: 'center' }));
     await page.waitForTimeout(400);
+    // The highlight is a separate ring appended to <body> above everything, so
+    // no ancestor with overflow hidden/auto can clip it (an outline on the
+    // element itself was cut off at rail edges).
+    const rings = [];
+    for (const t of highlights) {
+      const l = locate(t);
+      // Ring the part of the element the reader can actually see: its box
+      // intersected with every ancestor that clips (a scrolling list inside a
+      // popover is taller than the popover).
+      const box = await l.evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        let left = r.left, top = r.top, right = r.right, bottom = r.bottom;
+        for (let a = el.parentElement; a; a = a.parentElement) {
+          const o = getComputedStyle(a);
+          if (/(hidden|auto|scroll|clip)/.test(o.overflow + o.overflowX + o.overflowY)) {
+            const p = a.getBoundingClientRect();
+            left = Math.max(left, p.left); top = Math.max(top, p.top);
+            right = Math.min(right, p.right); bottom = Math.max(top, Math.min(bottom, p.bottom));
+          }
+        }
+        return { x: left, y: top, width: Math.max(0, right - left), height: Math.max(0, bottom - top) };
+      });
+      rings.push({ x: box.x - RING_OFFSET, y: box.y - RING_OFFSET, width: box.width + RING_OFFSET * 2, height: box.height + RING_OFFSET * 2 });
+    }
+    await page.evaluate((list) => {
+      for (const b of list) {
+        const d = document.createElement('div');
+        d.setAttribute('data-rn-ring', '');
+        Object.assign(d.style, {
+          position: 'fixed', left: `${b.x}px`, top: `${b.y}px`, width: `${b.width}px`, height: `${b.height}px`,
+          border: '2px solid rgb(14 165 233)', borderRadius: '10px', boxSizing: 'border-box',
+          pointerEvents: 'none', zIndex: '2147483647'
+        });
+        document.body.appendChild(d);
+      }
+    }, rings);
     const pad = s.pad ?? 14;
-    const boxes = [];
+    const boxes = [...rings];
     for (const t of s.targets) boxes.push(await locate(t).boundingBox());
     const x = Math.max(0, Math.min(...boxes.map((b) => b.x)) - pad);
     const y = Math.max(0, Math.min(...boxes.map((b) => b.y)) - pad);
     const r = Math.max(...boxes.map((b) => b.x + b.width)) + pad;
     const bottom = Math.max(...boxes.map((b) => b.y + b.height)) + pad;
     await page.screenshot({ path: `${OUT}/${s.name}.png`, clip: { x, y, width: r - x, height: bottom - y } });
+    await page.evaluate(() => document.querySelectorAll('[data-rn-ring]').forEach((n) => n.remove()));
+    highlights.length = 0;
     console.log(`${s.name}.png ${Math.round((r - x) * 2)}x${Math.round((bottom - y) * 2)}`);
   }
 }

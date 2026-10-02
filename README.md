@@ -228,7 +228,8 @@ skills/
   public-release-notes/
     SKILL.md                 Routine: public release note per completed feature
     references/              Content policy and entry template
-    scripts/                 Local app stack and element capture
+    references/style.md      Style guide adapted from blader/humanizer (MIT) and GitHub Docs (CC BY 4.0)
+    scripts/                 Local app stack, element capture, style review
     agents/openai.yaml       Explicit-only Codex discovery metadata
     assets/template.html    Business-facing HTML page template
     references/agent-prompt.md

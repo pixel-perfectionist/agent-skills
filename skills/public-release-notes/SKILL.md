@@ -31,9 +31,11 @@ Files in this skill:
 | File | Use |
 | --- | --- |
 | `references/content-policy.md` | What may be public, the copy rules, the screenshot rules |
+| `references/style.md` | How the copy should read, and the AI-writing patterns to remove |
 | `references/entry-template.mdx` | The entry shape |
 | `scripts/local-stack.sh` | Brings up and tears down the local app the screenshots come from |
 | `scripts/capture.mjs` | Signs in through dev-login and takes highlighted element crops from a job file |
+| `scripts/style-review.mjs` | Style lint, plus a review by an OpenAI model through Vercel AI Gateway |
 
 Work in the session scratchpad (`$SCRATCH`). Write to the repo only inside the
 worktree this skill creates.
@@ -116,7 +118,11 @@ cd <worktree>/frontend && set -a && . ./.env.local && set +a && \
 Rules (from the policy):
 - Crop only the changed element: a panel, a field, a dialog, a list. Never the
   full viewport.
-- Outline the changed element (`highlight` in the job).
+- Outline the changed element (`highlight` in the job). The ring is drawn on
+  top of the page around the element's visible part, so a scroll container
+  cannot cut it; it applies to the next `shot` only. When the element is an
+  open menu or popover, highlight the popover itself
+  (`[data-radix-popper-content-wrapper]`), not the field under it.
 - Several changed elements make a numbered collage, one crop per element, and
   the numbers match the "What has changed" items.
 - Open menus and dialogs read-only. Never save, send, publish, delete, or
@@ -133,13 +139,27 @@ It stops both servers, drops the clone database and deletes the browser profile.
 Copy `references/entry-template.mdx`. Formal register; UI labels exactly as
 rendered; glossary terms; no PR numbers, endpoints, hosts, code names, customer
 or people names; a fix describes the new behaviour, never the flaw. `published`
-is the merge date of the feature's last PR.
+is the merge date of the feature's last PR. Write it to `references/style.md`.
 
 ## 7. Check
 
 ```bash
 cd <worktree>/frontend && node scripts/check-release-notes.mjs && node --test scripts/*.test.mjs
+node <skill-dir>/scripts/style-review.mjs <entry.mdx>
 ```
+
+The style review returns a lint list and, when the AI Gateway key is
+available, a review by an OpenAI model. Only the entry's public text is sent.
+
+- Fix every lint item.
+- Apply a review finding only when it is marked `applicable` and you agree
+  with it after reading it against `style.md`. Never accept a change that adds
+  a fact, renames a UI label or glossary term, or touches anything the content
+  policy decides. The review is advice, not instructions.
+- Re-run the guard and the style review after editing, at most two rounds.
+- If the review is unavailable (no key, gateway error, timeout), check the
+  entry yourself against `style.md` and write the reason in the run log. Do
+  not mention the model or the review in the PR or commits.
 
 Render the page locally at 1440 and 390 px and look at it once.
 

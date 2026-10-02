@@ -36,6 +36,17 @@ renames and removals filed as chores.
   people names.
 - A fix is described as the new behaviour, never as the flaw.
 - Alt text and captions describe the UI element, never cell values.
+- Follow `style.md`. In short: no em or en dashes, no "not X but Y", no
+  announcement openers ("Introducing", "We're excited"), no exclamation marks
+  or emoji, no bold-label list items, no Title Case headings, no sales or
+  inflation words (seamless, powerful, robust, intuitive, leverage, unlock,
+  crucial, pivotal), no claims of degree a PR does not measure, and no closing
+  line that restates the point.
+- Feature sentence shape: who can do what, by using which part of the UI.
+  Present tense; "now" is implied.
+- Length: title at most about 70 characters, summary one sentence of at most
+  about 30 words, paragraphs at most 3 sentences, one to five "What has
+  changed" items.
 
 ## Screenshots
 
