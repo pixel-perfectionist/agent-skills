@@ -36,9 +36,39 @@ Files in this skill:
 | `scripts/local-stack.sh` | Brings up and tears down the local app the screenshots come from |
 | `scripts/capture.mjs` | Signs in through dev-login and takes highlighted element crops from a job file |
 | `scripts/style-review.mjs` | Style lint, plus a review by an OpenAI model through Vercel AI Gateway |
+| `scripts/routine-guard.py` | PreToolUse hook that limits what the scheduled run may do (see "Running unattended") |
 
 Work in the session scratchpad (`$SCRATCH`). Write to the repo only inside the
-worktree this skill creates.
+worktree this skill creates, `.claude/worktrees/rn-<slug>` on the branch
+`docs/release-notes-<slug>`. Other sessions keep their worktrees in the same
+folder; never touch them or the shared checkout.
+
+## Running unattended
+
+The scheduled task runs in the **Bypass permissions** mode, because a Manual
+run stops at the first prompt and nobody is there to answer it. Instead of
+prompts, `scripts/routine-guard.py` is a PreToolUse hook (matcher `*`) in the
+Decipher checkout's `.claude/settings.local.json`:
+
+```json
+"hooks": { "PreToolUse": [ { "matcher": "*", "hooks": [ { "type": "command", "timeout": 15,
+  "command": "g=\"$HOME/agent-skills/skills/public-release-notes/scripts/routine-guard.py\"; [ -f \"$g\" ] || exit 0; exec /usr/bin/python3 \"$g\"" } ] } ] }
+```
+
+It recognises the scheduled session by the `<scheduled-task
+name="decipher-release-notes">` tag at the top of the transcript and leaves
+every other session alone. In the routine it denies, in every mode: merging,
+approving, closing or editing PRs and any other GitHub write except one
+`gh pr create --head docs/release-notes-<slug>`; pushes other than
+`git push -u origin docs/release-notes-<slug>`, forced pushes, and branches
+whose diff leaves the Release Notes paths; git writes outside `rn-<slug>`
+worktrees; file writes outside that worktree and the temp directory; reading
+`.env` files or the Keychain and expanding secret variables; network calls
+other than the local stack; MCP and web tools; questions to the user and plan
+mode; package installs; database writes outside `decipher_dev_rn`.
+
+A denied call is final. Do not retry it another way; write it in the run log
+and the report.
 
 ## 0. Preconditions (stop and log if any fails)
 
@@ -165,7 +195,8 @@ Render the page locally at 1440 and 390 px and look at it once.
 
 ## 8. Commit, PR, never merge
 
-- Branch `docs/release-notes-<slug>` from `origin/main` in its own worktree.
+- Branch `docs/release-notes-<slug>` from `origin/main` in its own worktree:
+  `git worktree add -b docs/release-notes-<slug> ~/decipher/.claude/worktrees/rn-<slug> origin/main`.
 - Commit the entry, its images and the updated ledger. No AI attribution in
   commits or PRs (Decipher's `CLAUDE.md`).
 - Open the PR the way Decipher's `/pr` skill specifies: reviewer set minus the
@@ -173,6 +204,8 @@ Render the page locally at 1440 and 390 px and look at it once.
   and Summary / Risk / Security notes / Performance notes / Test plan sections.
   The body also lists every feature excluded or waiting in this run, with its
   category or reason (no detail beyond that).
+- Push with an explicit refspec, `git push -u origin docs/release-notes-<slug>`,
+  and open the PR with `gh pr create --head docs/release-notes-<slug> --base main`.
 - The pre-PR audit gate needs its sentinel; write it only after step 7 passed.
 - Never merge, never approve, never push to `main`.
 
