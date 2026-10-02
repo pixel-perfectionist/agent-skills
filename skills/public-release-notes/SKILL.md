@@ -169,7 +169,12 @@ It stops both servers, drops the clone database and deletes the browser profile.
 Copy `references/entry-template.mdx`. Formal register; UI labels exactly as
 rendered; glossary terms; no PR numbers, endpoints, hosts, code names, customer
 or people names; a fix describes the new behaviour, never the flaw. `published`
-is the merge date of the feature's last PR. Write it to `references/style.md`.
+is the merge date of the feature's last PR, and the file name starts with that
+same date (the guard fails a mismatch). `module` is the Company Module the
+feature needs, a `code` from `backend/apps/companies/fixtures/modules.json`, or
+`none` when every Company has it; the Release Note Announcement skips Companies
+without that Module. A feature held off in Production by a backend environment
+switch is not ready: record it as `waiting`. Write it to `references/style.md`.
 
 ## 7. Check
 
