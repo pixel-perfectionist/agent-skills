@@ -1,0 +1,52 @@
+# Public content policy
+
+The Release Notes page is public on the internet. Everything below applies to
+the entry text, the frontmatter, the alt text, the captions, the file names and
+the pixels of every screenshot.
+
+## What may become a note
+
+Only changes a customer can see in the product UI: new capabilities, visible
+improvements, noticeable fixes. Customer administrators are customers, so
+Configuration and Company settings work counts.
+
+Exclude, recording exactly one category:
+
+- `security`: security, access control, permissions, authentication, data
+  access rules, vulnerabilities, hardening, rate limits. This holds even when
+  the change shows up as a new screen or a "can no longer" behaviour.
+- `infra`: infrastructure, migrations, performance, logging, dependencies, CI,
+  tooling, refactors, tests, documentation, developer tooling.
+- `vendor`: third-party providers and where customer data goes.
+- `customer`: work for one customer, and any customer or tenant name.
+- `unreleased`: prototypes, anything behind a feature flag or build toggle,
+  platform-staff tools, devtools, mocks and fixtures.
+
+Signals worth checking in a PR: a new build-time flag or flag module, a
+platform-admin check, a `/prototypes/` path, mock data files, Risk or Security
+sections that are not boilerplate, a security fix described as plain behaviour,
+renames and removals filed as chores.
+
+## Copy
+
+- Formal register. Kinds: New feature, Enhancement, Resolved issue.
+- UI labels exactly as rendered, and terms from the product glossary.
+- Short, direct, active sentences.
+- No PR numbers, endpoints, tables, code names, hosts, customer, vendor or
+  people names.
+- A fix is described as the new behaviour, never as the flaw.
+- Alt text and captions describe the UI element, never cell values.
+
+## Screenshots
+
+- Every note with a UI change carries at least one screenshot.
+- A new screen: one wide crop of that screen. A change to part of a screen: a
+  crop of that part only.
+- Several changed elements: a numbered collage, one crop per element; the
+  numbers match the "What has changed" items.
+- The changed element is outlined in the capture.
+- Taken from the local copy of the app and its synthetic tenant only.
+- Never the user menu, avatars, people or organization names, record
+  identifiers, notifications or the Company switcher.
+- Screens that render static data copied from a real customer stay on the
+  denylist kept in the Decipher repo until that data is replaced.

@@ -10,6 +10,7 @@ A collection of skills for Claude Code and Codex: debate decisions, review plans
 | [AI ping pong](skills/ai-ping-pong/SKILL.md) | Run the separately requested Claude–Codex plan review loop. |
 | [Domain Language](skills/domain-language/SKILL.md) | Keep business discussions, the domain glossary, and implementation aligned. |
 | [Release Notes](skills/release-notes/SKILL.md) | Build a business-readable HTML digest from merged PRs, with screenshots and a full appendix. Currently configured for Decipher. |
+| [Public Release Notes](skills/public-release-notes/SKILL.md) | Publish one formal, customer-facing release note per completed feature to the Decipher Release Notes page, with highlighted element screenshots from a local copy of the app. Runs as a routine; opens PRs, never merges. |
 
 Domain Language and Release Notes are independently usable. The two-stage flow below describes Crossfire and AI ping pong.
 
@@ -70,7 +71,7 @@ git clone https://github.com/pixel-perfectionist/agent-skills.git
 cd agent-skills
 
 mkdir -p "$HOME/.agents/skills" "$HOME/.claude/skills"
-for skill_name in crossfire ai-ping-pong domain-language release-notes; do
+for skill_name in crossfire ai-ping-pong domain-language release-notes public-release-notes; do
   for skills_directory in "$HOME/.agents/skills" "$HOME/.claude/skills"; do
     skill_target="$skills_directory/$skill_name"
     if [ -e "$skill_target" ] || [ -L "$skill_target" ]; then
@@ -224,6 +225,10 @@ skills/
     references/glossary-and-adoption.md
   release-notes/
     SKILL.md                 Existing Decipher release-notes workflow
+  public-release-notes/
+    SKILL.md                 Routine: public release note per completed feature
+    references/              Content policy and entry template
+    scripts/                 Local app stack and element capture
     agents/openai.yaml       Explicit-only Codex discovery metadata
     assets/template.html    Business-facing HTML page template
     references/agent-prompt.md
