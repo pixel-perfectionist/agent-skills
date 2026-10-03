@@ -38,10 +38,22 @@ Files in this skill:
 | `scripts/style-review.mjs` | Style lint, plus a review by an OpenAI model through Vercel AI Gateway |
 | `scripts/routine-guard.py` | PreToolUse hook that limits what the scheduled run may do (see "Running unattended") |
 
-Work in the session scratchpad (`$SCRATCH`). Write to the repo only inside the
-worktree this skill creates, `.claude/worktrees/rn-<slug>` on the branch
-`docs/release-notes-<slug>`. Other sessions keep their worktrees in the same
-folder; never touch them or the shared checkout.
+Work in the session scratchpad (`$SCRATCH`). Write to the repo only inside your
+worktree, on the branch `docs/release-notes-<slug>`. Other sessions keep their
+worktrees in the same folder; never touch them or the shared checkout.
+
+- **The session started in its own worktree** (`.claude/worktrees/<name>` on a
+  `claude/<name>` branch; the scheduled routine runs this way): that folder is
+  your worktree. The app lets such a session write only inside it, and
+  `EnterWorktree` is denied, so never create or enter another one. As soon as
+  you know the slug, and before writing any file in it, run
+  `git fetch origin && git switch -c docs/release-notes-<slug> origin/main`
+  there.
+- **The session started in the shared checkout:** create
+  `.claude/worktrees/rn-<slug>` with
+  `git worktree add -b docs/release-notes-<slug> ~/decipher/.claude/worktrees/rn-<slug> origin/main`.
+
+`<worktree>` below means that folder.
 
 ## Running unattended
 
@@ -61,8 +73,9 @@ every other session alone. In the routine it denies, in every mode: merging,
 approving, closing or editing PRs and any other GitHub write except one
 `gh pr create --head docs/release-notes-<slug>`; pushes other than
 `git push -u origin docs/release-notes-<slug>`, forced pushes, and branches
-whose diff leaves the Release Notes paths; git writes outside `rn-<slug>`
-worktrees; file writes outside that worktree and the temp directory; reading
+whose diff leaves the Release Notes paths; git writes outside the routine
+worktree (the session's own, or `rn-<slug>`); file writes outside that worktree
+and the temp directory; reading
 `.env` files or the Keychain and expanding secret variables; network calls
 other than the local stack; MCP and web tools; questions to the user and plan
 mode; package installs; database writes outside `decipher_dev_rn`.
@@ -221,8 +234,12 @@ Render the page locally at 1440 and 390 px and look at it once.
 
 ## 8. Commit, PR, never merge
 
-- Branch `docs/release-notes-<slug>` from `origin/main` in its own worktree:
-  `git worktree add -b docs/release-notes-<slug> ~/decipher/.claude/worktrees/rn-<slug> origin/main`.
+- Work on `docs/release-notes-<slug>` in `<worktree>` (see the top of this
+  file for creating it). Rebase it on `origin/main` before pushing.
+- The pre-commit hook needs `<worktree>/frontend/node_modules`. If it is
+  missing (no local stack ran), install first with
+  `cd <worktree>/frontend && CI=true npx -y pnpm@10.6.5 install --frozen-lockfile --prefer-offline`;
+  Homebrew's pnpm 12 rewrites the lockfile.
 - Commit the entry, its images and the updated ledger. No AI attribution in
   commits or PRs (Decipher's `CLAUDE.md`).
 - Open the PR the way Decipher's `/pr` skill specifies: reviewer set minus the

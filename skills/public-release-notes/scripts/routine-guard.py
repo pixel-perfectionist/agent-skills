@@ -13,8 +13,9 @@ transcript, it denies these calls in every permission mode, bypass included:
   - pushing anything but a docs/release-notes-<slug> branch to origin, forced
     pushes, and branches whose diff against origin/main leaves the Release
     Notes paths;
-  - git writes outside the routine's own worktree
-    (.claude/worktrees/rn-<slug>; other sessions keep theirs there);
+  - git writes outside the routine's own worktree: the one the app started
+    the session in (.claude/worktrees/<name>), or .claude/worktrees/rn-<slug>
+    when it started in the shared checkout; other sessions keep theirs there;
   - file writes outside that worktree and the session temp directory;
   - reading or printing secrets (.env files, the Keychain, gh or Vercel tokens);
   - network calls to anything but the local stack, MCP and web tools,
@@ -44,6 +45,9 @@ TEMP_ROOTS = [os.path.realpath('/tmp/claude-%d' % os.getuid())]
 if os.environ.get('TMPDIR'):
     TEMP_ROOTS.append(os.path.realpath(os.environ['TMPDIR']))
 DEVICES = {'/dev/null', '/dev/stdout', '/dev/stderr', '/dev/tty'}
+# The worktree the app started the scheduled session in (its "worktree" option),
+# read from the transcript; None when the session started in the shared checkout.
+SESSION_WORKTREE = None
 
 TASK_MARKER = '<scheduled-task name=\\"decipher-release-notes\\"'
 BRANCH_RE = re.compile(r'^docs/release-notes-[a-z0-9][a-z0-9-]*$')
@@ -100,7 +104,7 @@ DENY_TOOLS = {
     'RemoteTrigger': 'the routine does not schedule work',
     'Workflow': 'the skill runs its agents with the Agent tool',
     'SendMessage': 'the routine does not message other sessions',
-    'EnterWorktree': 'the routine creates its worktree with git worktree add and keeps its session folder',
+    'EnterWorktree': 'the routine works in the worktree its session started in, or one it adds with git worktree add',
 }
 DENY_PROGS = {
     'sudo': 'no elevated commands', 'doas': 'no elevated commands', 'su': 'no elevated commands',
@@ -144,7 +148,11 @@ def deny(reason):
 # ---------------------------------------------------------------- detection
 
 def is_routine(payload):
+    """True in the scheduled session. Also records the worktree the app started
+    it in, from the cwd of the transcript's first records."""
+    global SESSION_WORKTREE
     if os.environ.get('RN_GUARD_FORCE') == '1':
+        SESSION_WORKTREE = session_worktree(os.environ.get('RN_GUARD_SESSION_CWD'))
         return True
     path = payload.get('transcript_path') or ''
     session = payload.get('session_id') or ''
@@ -158,12 +166,22 @@ def is_routine(payload):
     for candidate in candidates:
         try:
             with open(candidate, 'r', encoding='utf-8', errors='replace') as f:
+                marked, start_cwd = False, None
                 for _ in range(12):
                     line = f.readline()
                     if not line:
                         break
-                    if TASK_MARKER in line:
-                        return True
+                    marked = marked or TASK_MARKER in line
+                    if start_cwd is None:
+                        try:
+                            start_cwd = json.loads(line).get('cwd')
+                        except (ValueError, AttributeError):
+                            pass
+                    if marked and start_cwd:
+                        break
+                if marked:
+                    SESSION_WORKTREE = session_worktree(start_cwd)
+                    return True
         except OSError:
             pass
     return False
@@ -193,10 +211,21 @@ def resolve(path, base):
     return os.path.realpath(path)
 
 
+def session_worktree(cwd):
+    """The .claude/worktrees/<name> folder holding ``cwd``, or None outside one."""
+    real = os.path.realpath(cwd) if cwd else None
+    if real is None or not under(real, WORKTREES) or real == WORKTREES:
+        return None
+    return os.path.join(WORKTREES, real[len(WORKTREES):].strip('/').split('/')[0])
+
+
 def routine_worktree(real):
-    """True for .claude/worktrees/rn-<slug> (or release-notes-<slug>) and paths inside it."""
+    """True for the session's own worktree, .claude/worktrees/rn-<slug> (or
+    release-notes-<slug>), and paths inside them."""
     if real is None or not under(real, WORKTREES) or real == WORKTREES:
         return False
+    if SESSION_WORKTREE and under(real, SESSION_WORKTREE):
+        return True
     return real[len(WORKTREES):].strip('/').split('/')[0].startswith(WORKTREE_PREFIXES)
 
 
@@ -234,7 +263,8 @@ def check_write_target(target, cur, env):
 def check_write_path(path, cwd):
     real = resolve(os.path.expanduser(path), cwd)
     if real is None or not writable(real):
-        deny('files are written only inside .claude/worktrees/rn-<slug>/ and the session temp directory, not %s' % path)
+        deny('files are written only inside the routine worktree (the session\'s own, or '
+             '.claude/worktrees/rn-<slug>) and the session temp directory, not %s' % path)
 
 
 # ---------------------------------------------------------------- shell text
@@ -878,7 +908,8 @@ def check_git(args, cur, env):
         return
     if sub in GIT_WORKTREE_WRITE:
         if not in_worktree:
-            deny('git %s runs only inside .claude/worktrees/rn-<slug>, never in the shared checkout or another session\'s worktree' % sub)
+            deny('git %s runs only inside the routine worktree (the session\'s own, or .claude/worktrees/rn-<slug>), '
+                 'never in the shared checkout or another session\'s worktree' % sub)
         if sub == 'commit' and any(r in ('--no-verify', '-n') for r in rest):
             deny('commits keep their hooks; the content guard runs in pre-commit')
         if sub in ('checkout', 'switch'):
@@ -1026,7 +1057,7 @@ def check_shell(prog, args, cur, env, depth):
                 wt = pos[2] if len(pos) > 2 else None
                 wt_real = resolve(expand(wt, env), cur) if wt else None
                 if not routine_worktree(wt_real):
-                    deny('local-stack.sh runs only on .claude/worktrees/rn-<slug>')
+                    deny('local-stack.sh runs only on the routine worktree')
             continue
         if not trusted(real):
             check_command(source, os.path.dirname(real), depth + 1, env)
