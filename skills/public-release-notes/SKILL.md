@@ -84,7 +84,9 @@ window at `2026-09-14` (the backfill start). The window ends now (UTC).
 The ledger holds, per run: `from`, `until`, the merged-PR count, and per
 feature `{ key, prs[], decision, reason, value?, entry? }` where `decision` is one of
 `published`, `excluded`, `waiting`. Waiting features are re-checked on every
-run until they are published or excluded.
+run until they are published or excluded. A waiting feature whose reason does
+not name the PR that last reset it is re-checked in full against the current
+rules, never carried over unchanged.
 
 ## 2. Collect
 
