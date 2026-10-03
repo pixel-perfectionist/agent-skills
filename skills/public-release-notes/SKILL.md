@@ -160,6 +160,9 @@ Rules (from the policy):
   is set in the clone database, never through the UI.
 - Look at every crop. If it shows a person's name, an email, a record
   identifier or anything customer-like, discard it and retake or wait.
+- In the entry's `images`, `width` and `height` are the PNG's own pixel size
+  (`sips -g pixelWidth -g pixelHeight <file>`), not the CSS size of the
+  element. The page and the Release Note Email scale from those numbers.
 
 Tear down when done: `bash <skill-dir>/scripts/local-stack.sh down <worktree>`.
 It stops both servers, drops the clone database and deletes the browser profile.
