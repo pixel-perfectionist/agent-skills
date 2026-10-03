@@ -115,7 +115,11 @@ refute "safe to publish". A borderline or refuted feature is recorded as
 A feature becomes a note only when all of these hold:
 
 1. It is verified safe.
-2. **Settled:** no merged PR has touched it for 3 days.
+2. **Settled:** for 3 days no merged PR has changed what the note would
+   describe: its behaviour, or a screen it would show. PRs classified as
+   `minor`, `infra` or `security` that touch the same files do not reset the
+   3 days, unless they change a screenshotted element enough that the
+   screenshot would differ. Record the PR that last reset it in the reason.
 3. Every UI change in it can be shown (step 5). A screen on the policy's
    screenshot denylist means the feature waits.
 4. **Worth telling customers.** Write one sentence, from the customer's side,
