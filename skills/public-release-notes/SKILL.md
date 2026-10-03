@@ -82,7 +82,7 @@ Read `_ledger.json` from `origin/main`. If it does not exist yet, start the
 window at `2026-09-14` (the backfill start). The window ends now (UTC).
 
 The ledger holds, per run: `from`, `until`, the merged-PR count, and per
-feature `{ key, prs[], decision, reason, entry? }` where `decision` is one of
+feature `{ key, prs[], decision, reason, value?, entry? }` where `decision` is one of
 `published`, `excluded`, `waiting`. Waiting features are re-checked on every
 run until they are published or excluded.
 
@@ -118,13 +118,25 @@ A feature becomes a note only when all of these hold:
 2. **Settled:** no merged PR has touched it for 3 days.
 3. Every UI change in it can be shown (step 5). A screen on the policy's
    screenshot denylist means the feature waits.
-4. It is substantial enough for one coherent note: several related PRs, or one
-   PR a customer will clearly notice.
+4. **Worth telling customers.** Write one sentence, from the customer's side,
+   saying what they can now do or do differently. The feature qualifies only
+   as one of these: a new capability, a changed workflow or UX flow, or a
+   product update that changes how customers work. Bug fixes, visual polish,
+   copy and spacing tweaks and other small UI adjustments never qualify on
+   their own, however many PRs they span. They may appear as one item inside a
+   qualifying note about the same area. The test: would an opted-in user be
+   glad to get this note as an email? If not, it does not qualify.
 
-Anything short of that is recorded as `waiting` with the reason. Publish at
-most one note per run, oldest feature first. If nothing is ready, update the
-ledger only (step 8 with no entry) or, if the ledger has not changed, end the
-run.
+A feature that fails condition 4 is recorded as `excluded` with category
+`minor`. Its PRs can still join a later feature in the same area that does
+qualify. A feature that passes 4 but fails 2 or 3 is recorded as `waiting`
+with the reason. Store the condition 4 sentence as `value` on every published
+or waiting feature.
+
+Publish at most one note per run, oldest feature first. Most runs publish
+nothing, and that is the expected outcome. Never lower the bar to have
+something to publish. If nothing is ready, update the ledger only (step 8 with
+no entry) or, if the ledger has not changed, end the run.
 
 ## 5. Screenshots from the local app
 

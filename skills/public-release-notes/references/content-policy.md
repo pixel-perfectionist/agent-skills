@@ -6,12 +6,17 @@ the pixels of every screenshot.
 
 ## What may become a note
 
-Only changes a customer can see in the product UI: new capabilities, visible
-improvements, noticeable fixes. Customer administrators are customers, so
+Only changes a customer can see in the product UI and would want to hear about:
+new capabilities, changed workflows or UX flows, and product updates that
+change how customers work (SKILL.md step 4). Fixes and polish appear only as
+items inside such a note. Customer administrators are customers, so
 Configuration and Company settings work counts.
 
 Exclude, recording exactly one category:
 
+- `minor`: bug fixes, visual polish, copy and spacing tweaks and other small UI
+  adjustments that do not change what a customer can do or how they work. Many
+  of them together are still `minor`.
 - `security`: security, access control, permissions, authentication, data
   access rules, vulnerabilities, hardening, rate limits. This holds even when
   the change shows up as a new screen or a "can no longer" behaviour.
@@ -29,7 +34,8 @@ renames and removals filed as chores.
 
 ## Copy
 
-- Formal register. Kinds: New feature, Enhancement, Resolved issue.
+- Formal register. Kinds: New feature, Enhancement. A fix never carries a note
+  of its own.
 - UI labels exactly as rendered, and terms from the product glossary.
 - Short, direct, active sentences.
 - No PR numbers, endpoints, tables, code names, hosts, customer, vendor or
