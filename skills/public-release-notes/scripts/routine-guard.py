@@ -45,6 +45,11 @@ TEMP_ROOTS = [os.path.realpath('/tmp/claude-%d' % os.getuid())]
 if os.environ.get('TMPDIR'):
     TEMP_ROOTS.append(os.path.realpath(os.environ['TMPDIR']))
 DEVICES = {'/dev/null', '/dev/stdout', '/dev/stderr', '/dev/tty'}
+# Variables a command may name in a write target. TMPDIR is the session's temp
+# directory (the hook inherits it), already one of TEMP_ROOTS.
+BASE_ENV = {'HOME': HOME, 'USER': os.environ.get('USER', '')}
+if os.environ.get('TMPDIR'):
+    BASE_ENV['TMPDIR'] = os.environ['TMPDIR'].rstrip('/')
 # The worktree the app started the scheduled session in (its "worktree" option),
 # read from the transcript; None when the session started in the shared checkout.
 SESSION_WORKTREE = None
@@ -550,7 +555,7 @@ def check_command(cmd, cwd, depth=0, env=None):
     if depth > 5:
         deny('command nesting too deep to inspect')
     raw_scan(cmd)
-    env = dict(env or {'HOME': HOME, 'USER': os.environ.get('USER', '')})
+    env = dict(env or BASE_ENV)
     text, bodies = split_heredocs(cmd)
     cur = cwd
     for seg in split_segments(text):
