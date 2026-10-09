@@ -1,6 +1,6 @@
 # Agent Skills
 
-A collection of skills for Claude Code and Codex: debate decisions, review plans with two models, maintain a shared domain language, apply pragmatic TypeScript/JavaScript practices, and prepare business-readable release notes.
+A collection of skills for Claude Code and Codex: debate decisions, review plans with two models, maintain a shared domain language, apply pragmatic TypeScript/JavaScript practices, give pull request feedback in your own voice, and prepare business-readable release notes.
 
 ## Skills in this collection
 
@@ -10,9 +10,10 @@ A collection of skills for Claude Code and Codex: debate decisions, review plans
 | [AI ping pong](skills/ai-ping-pong/SKILL.md) | Run the separately requested Claude–Codex plan review loop. |
 | [Domain Language](skills/domain-language/SKILL.md) | Keep business discussions, the domain glossary, and implementation aligned. |
 | [Pragmatic Engineering](skills/pragmatic-engineering/SKILL.md) | Apply practical TypeScript/JavaScript engineering with clear contracts, observable failures, and project-first conventions. |
+| [PR Feedback](skills/pr-feedback/SKILL.md) | Review a pull request, approve every comment, then post them in your own voice with random delays. |
 | [Release Notes](skills/release-notes/SKILL.md) | Build a business-readable HTML digest from merged PRs, with screenshots and a full appendix. Currently configured for Decipher. |
 
-Domain Language, Pragmatic Engineering, and Release Notes are independently usable. The two-stage flow below describes Crossfire and AI ping pong.
+Domain Language, Pragmatic Engineering, and Release Notes are independently usable. PR Feedback builds on Pragmatic Engineering. The two-stage flow below describes Crossfire and AI ping pong.
 
 ## Crossfire and AI ping pong
 
@@ -51,7 +52,7 @@ The diagram shows Crossfire's Full mode. Quick mode handles simple decisions; Bl
 
 ## Install
 
-Crossfire, Domain Language, and Pragmatic Engineering require a Claude Code or Codex host that supports skills. For Crossfire, real isolated subagents are preferred; when they are unavailable, the skill requires disclosure that its perspectives are simulated in one context. Domain Language and Pragmatic Engineering have no helper runtime or second-provider CLI requirement.
+Crossfire, Domain Language, Pragmatic Engineering, and PR Feedback require a Claude Code or Codex host that supports skills. For Crossfire, real isolated subagents are preferred; when they are unavailable, the skill requires disclosure that its perspectives are simulated in one context. Domain Language and Pragmatic Engineering have no helper runtime or second-provider CLI requirement.
 
 AI ping pong additionally requires:
 
@@ -62,6 +63,8 @@ AI ping pong additionally requires:
 
 Release Notes is the existing Decipher-specific workflow. It requires an authorized Decipher checkout and GitHub access through `gh`, Python 3.9+, and, for screenshots, Node.js, `@playwright/test`, Chrome, and the developer's running frontend with its normal local environment configuration. Cropping uses macOS `sips` or Pillow. Its repository, stage URL, domain terminology, and dev-login flow need adaptation before use with another project.
 
+PR Feedback requires Pragmatic Engineering installed beside it, `gh` signed in as the account that should post the comments, and Python 3.9 or later; its helper uses only the standard library.
+
 Clone this repository and register its skill directories:
 
 ```sh
@@ -71,7 +74,7 @@ git clone https://github.com/pixel-perfectionist/agent-skills.git
 cd agent-skills
 
 mkdir -p "$HOME/.agents/skills" "$HOME/.claude/skills"
-for skill_name in crossfire ai-ping-pong domain-language pragmatic-engineering release-notes; do
+for skill_name in crossfire ai-ping-pong domain-language pragmatic-engineering pr-feedback release-notes; do
   for skills_directory in "$HOME/.agents/skills" "$HOME/.claude/skills"; do
     skill_target="$skills_directory/$skill_name"
     if [ -e "$skill_target" ] || [ -L "$skill_target" ]; then
@@ -139,6 +142,22 @@ $pragmatic-engineering Review this change for correctness and unnecessary comple
 ```
 
 Invoke the skill explicitly; ordinary coding and review requests do not activate it. Claude Code frontmatter and Codex discovery metadata both disable automatic invocation. The [core guidance](skills/pragmatic-engineering/SKILL.md) covers everyday work, while the [architecture reference](skills/pragmatic-engineering/references/architecture.md) describes optional patterns and their limits. Invoking the style does not by itself authorize commits, deployment, or publication.
+
+## PR Feedback
+
+Review a teammate's pull request and leave feedback that reads like you wrote it. The skill reviews with Pragmatic Engineering, checks each finding before raising it (tests, failing CI, the running UI), and drafts short, plain comments: one point each, with a reason and a concrete ask.
+
+```text
+# In Claude Code
+/pr-feedback Review #42 and #45 and draft comments.
+
+# In Codex
+$pr-feedback Review #42 and #45 and draft comments.
+```
+
+**Nothing is posted until you approve the exact text.** The skill shows every comment with its location, the account that will post it, and the timing. After approval, the helper posts plain comments one at a time with random 3–7 minute gaps, stops if the author pushes new commits, and confirms each comment on GitHub. It never approves, requests changes, or resolves threads unless you ask.
+
+Invoking PR Feedback counts as asking for Pragmatic Engineering, so it reads that skill directly even though Pragmatic Engineering is otherwise explicit-only. The [voice guide](skills/pr-feedback/references/voice.md) holds the comment style with examples; replace them with your own comments to match how you write.
 
 ## Release Notes
 
@@ -222,6 +241,13 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
 
 Live checks on macOS used Claude Code 2.1.283 and Codex CLI 0.157.1. Both CLI paths returned approvals for the same small test packet, and the combined validation passed. Those checks verify transport and the approval protocol, not the quality of real-world planning. Compatibility with other CLI versions has not been established; unsupported flags fail visibly.
 
+The PR Feedback helper has 18 offline tests covering plan validation, diff anchors, the voice checks, and the posting loop's order, delays, resume, duplicate, dry-run, and stop-on-push behavior. They make no GitHub requests.
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
+  -s skills/pr-feedback/scripts -p 'test_post_review_comments.py'
+```
+
 ```text
 skills/
   crossfire/
@@ -241,6 +267,12 @@ skills/
     SKILL.md                 Explicitly requested TypeScript/JavaScript style
     agents/openai.yaml       Explicit-only Codex discovery metadata
     references/architecture.md
+  pr-feedback/
+    SKILL.md                 Review, approve, then post pull request comments
+    agents/openai.yaml       Codex discovery metadata
+    references/voice.md      Comment style with examples
+    scripts/post_review_comments.py  Validate, post with delays, and check comments
+    scripts/test_post_review_comments.py
   release-notes/
     SKILL.md                 Existing Decipher release-notes workflow
     agents/openai.yaml       Explicit-only Codex discovery metadata

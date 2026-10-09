@@ -20,6 +20,8 @@ reject them instead.
 ```ts
 type RetryOptions = Readonly<{ retryLimit: number }>;
 
+const maxRetryLimit = 5;
+
 function parseRetryOptions(input: unknown): RetryOptions {
   if (
     typeof input !== "object" ||
@@ -35,9 +37,11 @@ function parseRetryOptions(input: unknown): RetryOptions {
     typeof retryLimit !== "number" ||
     !Number.isInteger(retryLimit) ||
     retryLimit < 0 ||
-    retryLimit > 5
+    retryLimit > maxRetryLimit
   ) {
-    throw new TypeError("retryLimit must be an integer from 0 through 5");
+    throw new TypeError(
+      `retryLimit must be an integer from 0 through ${maxRetryLimit}`,
+    );
   }
 
   return { retryLimit };
@@ -211,7 +215,10 @@ mode does not mutate state. Do not scatter the flag through every layer.
 
 In interactive tools, request approval where required. In unattended runs,
 require the project's explicit apply policy; absence of a terminal is not
-consent.
+consent. When the project defines merging as approval to apply, the reviewed
+pull request is the approval and the pipeline is the apply step. Show the plan
+in the pipeline's output instead of adding prompts, manual modes, or a
+separate workflow.
 
 ## 5. Choose state ownership before functions or classes
 
@@ -264,3 +271,43 @@ check as a complete filesystem security boundary.
 
 **Skip when:** no new effect or runtime boundary is involved. Do not add a
 platform abstraction before the project actually supports multiple platforms.
+
+## 7. Model persisted data for the domain
+
+**Use when:** adding or changing database tables or persisted documents, or
+moving data to a new store.
+
+**Approach:** derive the model from the domain's entities, invariants,
+lifecycle, and access patterns, not from the previous storage format or an
+API payload. These defaults usually hold:
+
+- **Identity:** prefer stable generated keys of the strictest available type.
+  Keep mutable natural identifiers, such as email, in their own named, unique
+  columns so that identity survives a change.
+- **Relationships:** reference other entities by key instead of copying their
+  attributes into each row, unless the copy is an intentional snapshot.
+- **Audit:** when the domain needs to know who acted, pair each event time
+  with its actor.
+- **Optionality:** derive nullability from real cases. A value that does not
+  always exist is nullable; everything else is required.
+- **Closed sets:** derive enum values from their authoritative definition
+  instead of typing them again.
+- **Carry-overs:** keep format versions, flattened variant fields, and cached
+  or derived values from an earlier format only for a current compatibility or
+  query need.
+- **Shape:** choose JSON or relational storage for a list from its query,
+  integrity, and update needs.
+
+**Verify:** create the schema with the configuration the project will actually
+use, against a disposable database. One smoke test can show that the
+declaration materializes as intended. Test custom constraints, migrations,
+and queries, and identify a violated constraint by its name. Do not test
+built-in enforcement such as types, `NOT NULL`, uniqueness, defaults, or
+foreign keys.
+
+**Limits:** normalization protects integrity but does not make a model
+correct. Denormalize deliberately when history, performance, or an external
+contract requires it. Each column should serve a known need.
+
+**Skip when:** the store is a cache, or an opaque document whose shape another
+system owns.
