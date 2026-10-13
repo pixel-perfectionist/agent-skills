@@ -163,7 +163,7 @@ no entry) or, if the ledger has not changed, end the run.
 bash <skill-dir>/scripts/local-stack.sh up <worktree>    # clone DB, backend :8002, frontend :3300
 ```
 
-The stack is a fresh worktree of `origin/main`. It runs with every feature flag
+The stack is a fresh worktree of `origin/main`, on its own Python environment (synced to the worktree's `pyproject.toml` every run) and a clone of its own base database `decipher_dev_rn_base` (migrated forward every run; the shared `decipher_dev` is never migrated). It runs with every feature flag
 and analytics variable removed, against a clone of the local development
 database and its synthetic test tenant. It is never stage, never customer data.
 `local-stack.sh` prints what it changed in the clone.

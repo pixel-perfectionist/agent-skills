@@ -6,8 +6,8 @@
 #                                    tenant, start backend :8002 + frontend :3300
 #   local-stack.sh down <worktree>   stop both, drop the clone, delete the profile
 #
-# Needs: Homebrew postgresql@16 + redis running, the shared backend .venv and
-# .env in ~/decipher/backend, and a local-operator env file at
+# Needs: Homebrew postgresql@16 + redis running, the shared backend .env in
+# ~/decipher/backend, and a local-operator env file at
 # $RELEASE_NOTES_ENV (default ~/.config/decipher-release-notes/env.local) holding
 # DEV_LOGIN_* for the LOCAL backend. Values are never printed.
 set -euo pipefail
@@ -16,6 +16,12 @@ cmd="${1:?up|down}"
 wt="$(cd "${2:?worktree path}" && pwd)"
 repo="${DECIPHER_REPO:-$HOME/decipher}"
 db="${RELEASE_NOTES_DB:-decipher_dev_rn}"
+# The stack's own base DB, migrated forward every run and cloned from: the
+# shared decipher_dev is never migrated, and lags main's schema.
+base="${RELEASE_NOTES_BASE_DB:-decipher_dev_rn_base}"
+# The stack's own Python environment, synced to the worktree's pyproject every
+# run, so a dependency new on main never stops it and the shared venv is untouched.
+venv="${RELEASE_NOTES_VENV:-$HOME/.cache/decipher-release-notes/venv}"
 env_src="${RELEASE_NOTES_ENV:-$HOME/.config/decipher-release-notes/env.local}"
 tenant_id="${RELEASE_NOTES_TENANT_ID:-3}"
 operator="${RELEASE_NOTES_OPERATOR:-local-operator@decipher.test}"
@@ -47,7 +53,9 @@ fi
 mkdir -p "$run"
 
 # Backend: the worktree's code on the shared venv and env.
-ln -sfn "$repo/backend/.venv" "$wt/backend/.venv"
+mkdir -p "$(dirname "$venv")"
+ln -sfn "$venv" "$wt/backend/.venv"
+(cd "$wt/backend" && UV_PROJECT_ENVIRONMENT="$venv" uv sync --quiet --no-install-project >/dev/null)
 ln -sfn "$repo/backend/.env" "$wt/backend/.env"
 
 # Frontend: a real install; Homebrew pnpm 12 rewrites the lockfile.
@@ -61,8 +69,10 @@ chmod 600 "$wt/frontend/.env.local"
 
 # Database: a clone, never the shared DB.
 dropdb -h 127.0.0.1 --if-exists "$db"
-createdb -h 127.0.0.1 -T decipher_dev "$db"
-(cd "$wt/backend" && DATABASE_URL="$db_url" uv run --no-sync python manage.py migrate --noinput >/dev/null)
+base_url="postgres://$(whoami)@127.0.0.1:5432/$base"
+psql -h 127.0.0.1 -lqt | cut -d'|' -f1 | grep -qw "$base" || createdb -h 127.0.0.1 -T decipher_dev "$base"
+(cd "$wt/backend" && DATABASE_URL="$base_url" uv run --no-sync python manage.py migrate --noinput >/dev/null)
+createdb -h 127.0.0.1 -T "$base" "$db"
 
 # The synthetic tenant: the operator administers it, and it is open for work.
 (cd "$wt/backend" && DATABASE_URL="$db_url" uv run --no-sync python manage.py shell -c "
