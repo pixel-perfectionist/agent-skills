@@ -1,0 +1,4 @@
+interface:
+  display_name: "User Flows"
+  short_description: "Map user journeys and what protects them"
+  default_prompt: "Use $user-flows to map this product's user flows with diagrams and find the critical journeys our tests must cover before release."

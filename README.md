@@ -12,8 +12,9 @@ A collection of skills for Claude Code and Codex: debate decisions, review plans
 | [Pragmatic Engineering](skills/pragmatic-engineering/SKILL.md) | Apply practical TypeScript/JavaScript engineering with clear contracts, observable failures, and project-first conventions. |
 | [PR Feedback](skills/pr-feedback/SKILL.md) | Review a pull request, approve every comment, then post them in your own voice with random delays. |
 | [Release Notes](skills/release-notes/SKILL.md) | Build a business-readable HTML digest from merged PRs, with screenshots and a full appendix. Currently configured for Decipher. |
+| [User Flows](skills/user-flows/SKILL.md) | Map a product's user journeys as diagrams and find the critical ones tests must protect before release. |
 
-Domain Language, Pragmatic Engineering, and Release Notes are independently usable. PR Feedback builds on Pragmatic Engineering. The two-stage flow below describes Crossfire and AI ping pong.
+Domain Language, Pragmatic Engineering, User Flows, and Release Notes are independently usable. PR Feedback builds on Pragmatic Engineering. The two-stage flow below describes Crossfire and AI ping pong.
 
 ## Crossfire and AI ping pong
 
@@ -65,6 +66,8 @@ Release Notes is the existing Decipher-specific workflow. It requires an authori
 
 PR Feedback requires Pragmatic Engineering installed beside it, `gh` signed in as the account that should post the comments, and Python 3.9 or later; its helper uses only the standard library.
 
+User Flows requires Node.js 18 or later. To walk the UI and render diagrams, its helpers use the Playwright or Puppeteer the mapped project already has, or one you point them at; Playwright falls back to an installed Chrome. Mermaid comes from the project or, failing that, from jsDelivr. The skill installs nothing itself.
+
 Clone this repository and register its skill directories:
 
 ```sh
@@ -74,7 +77,7 @@ git clone https://github.com/pixel-perfectionist/agent-skills.git
 cd agent-skills
 
 mkdir -p "$HOME/.agents/skills" "$HOME/.claude/skills"
-for skill_name in crossfire ai-ping-pong domain-language pragmatic-engineering pr-feedback release-notes; do
+for skill_name in crossfire ai-ping-pong domain-language pragmatic-engineering pr-feedback release-notes user-flows; do
   for skills_directory in "$HOME/.agents/skills" "$HOME/.claude/skills"; do
     skill_target="$skills_directory/$skill_name"
     if [ -e "$skill_target" ] || [ -L "$skill_target" ]; then
@@ -175,6 +178,20 @@ The [procedure](skills/release-notes/SKILL.md), [content guide](skills/release-n
 
 The source workflow names Claude tools such as Explore agents, Read, and SendUserFile. In Codex, use available isolated subagents, image inspection, and a local file link or attachment for those operations. Codex metadata keeps invocation explicit-only. Runtime adaptation to another project remains separate from this import.
 
+## User Flows
+
+Map what people actually do in a product: where they start, what they press, what opens, and what they end up with. The skill reads the project's own specification, routes, API and tests, walks the running UI with a headless browser, and writes a `USER-FLOWS.md` with an actor map, a site map, and one Mermaid diagram per journey. A coverage table then sets each journey against the tests that protect it today and marks the critical user journeys (P0) a pre-release regression suite has to walk.
+
+```text
+# In Claude Code
+/user-flows Map the user flows of this app and what our tests must cover before we ship.
+
+# In Codex
+$user-flows Map the user flows of this app and what our tests must cover before we ship.
+```
+
+It asks which surfaces to cover and where the document goes before writing anything. Journeys are named the way a user would say them and start from every entry point. Inconsistencies found on the way are recorded as open questions, not fixed, and the skill does not write the tests. A site behind single sign-on is not scraped; the report says what was walked and what was only read from code. See the [procedure](skills/user-flows/SKILL.md), the [document template](skills/user-flows/references/document-template.md), and the [helper scripts](skills/user-flows/references/scripts.md).
+
 ## AI ping pong models and reasoning
 
 | Side | Default model ID | How the review runs |
@@ -248,6 +265,12 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover \
   -s skills/pr-feedback/scripts -p 'test_post_review_comments.py'
 ```
 
+The User Flows helpers have 8 offline tests covering label matching, step validation, Mermaid extraction, and argument parsing. Both scripts were also run against a live local app through Puppeteer and through Playwright with Chrome.
+
+```sh
+node --test skills/user-flows/scripts/flows.test.mjs
+```
+
 ```text
 skills/
   crossfire/
@@ -281,6 +304,16 @@ skills/
     references/content-guide.md
     scripts/build.py         Appendix, image crop, and HTML bundle helpers
     scripts/run.mjs          Playwright screenshot job runner
+  user-flows/
+    SKILL.md                 Map user journeys and the tests that protect them
+    agents/openai.yaml       Codex discovery metadata
+    references/document-template.md
+    references/research-prompts.md
+    references/scripts.md    Helper usage
+    scripts/walk_ui.mjs      Walk a running app and list what can be acted on
+    scripts/check_mermaid.mjs  Render every Mermaid block and fail on errors
+    scripts/lib/             Browser adapter and pure helpers
+    scripts/flows.test.mjs
 docs/
   research.md                Annotated research references
 ```
