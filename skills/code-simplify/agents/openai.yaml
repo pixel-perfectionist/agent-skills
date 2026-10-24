@@ -1,0 +1,6 @@
+interface:
+  display_name: "Code Simplify"
+  short_description: "Simplify changed code and prove behavior held"
+  default_prompt: "Use $code-simplify to simplify the code changed on this branch without changing its behavior."
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Web Performance Audit"
+  short_description: "Core Web Vitals audit with measured numbers only"
+  default_prompt: "Use $webperf to audit this web app's performance and return a scorecard and ranked findings."

@@ -1,6 +1,6 @@
 # Agent Skills
 
-A collection of skills for Claude Code and Codex: debate decisions, review plans with two models, maintain a shared domain language, apply pragmatic TypeScript/JavaScript practices, give pull request feedback in your own voice, and prepare business-readable release notes.
+A collection of skills for Claude Code and Codex: debate decisions, review plans with two models, maintain a shared domain language, apply pragmatic TypeScript/JavaScript practices, give pull request feedback in your own voice, prepare business-readable release notes, simplify code without changing its behavior, optimize and audit performance from measurements, and enforce a project's quality bar.
 
 ## Skills in this collection
 
@@ -13,8 +13,12 @@ A collection of skills for Claude Code and Codex: debate decisions, review plans
 | [PR Feedback](skills/pr-feedback/SKILL.md) | Review a pull request, approve every comment, then post them in your own voice with random delays. |
 | [Release Notes](skills/release-notes/SKILL.md) | Build a business-readable HTML digest from merged PRs, with screenshots and a full appendix. Currently configured for Decipher. |
 | [User Flows](skills/user-flows/SKILL.md) | Map a product's user journeys as diagrams and find the critical ones tests must protect before release. |
+| [Code Simplify](skills/code-simplify/SKILL.md) | Simplify changed code and show the evidence that its behavior did not change. |
+| [Performance Optimization](skills/performance-optimization/SKILL.md) | Measure, change one thing, re-measure against noise, and keep only what beats the baseline. |
+| [Web Performance Audit](skills/webperf/SKILL.md) | Audit a web app with a read-only subagent: a Core Web Vitals scorecard from real measurements and ranked findings. |
+| [Constraints](skills/constraints/SKILL.md) | Write the project's quality bar into CONSTRAINTS.md and enforce it with hooks, a permission rule, and a floor guard. |
 
-Domain Language, Pragmatic Engineering, User Flows, and Release Notes are independently usable. PR Feedback builds on Pragmatic Engineering. The two-stage flow below describes Crossfire and AI ping pong.
+Domain Language, Pragmatic Engineering, User Flows, Release Notes, Code Simplify, Performance Optimization, and Constraints are independently usable. PR Feedback builds on Pragmatic Engineering, and Web Performance Audit builds on Performance Optimization. The two-stage flow below describes Crossfire and AI ping pong. The last four skills are adapted from [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills); see [Adapted skills](#adapted-skills).
 
 ## Crossfire and AI ping pong
 
@@ -68,6 +72,8 @@ PR Feedback requires Pragmatic Engineering installed beside it, `gh` signed in a
 
 User Flows requires Node.js 18 or later. To walk the UI and render diagrams, its helpers use the Playwright or Puppeteer the mapped project already has, or one you point them at; Playwright falls back to an installed Chrome. Mermaid comes from the project or, failing that, from jsDelivr. The skill installs nothing itself.
 
+Code Simplify and Performance Optimization have no helper runtime. Performance Optimization runs whatever measurement tools fit the surface (`hyperfine`, `autocannon`, Lighthouse through `npx`, the project's database client) and asks you for a running URL rather than starting servers. Web Performance Audit needs Performance Optimization installed beside it and, in Claude Code, its `web-performance-auditor` subagent registered (see below); Deep mode needs Chrome for Lighthouse or a Chrome DevTools MCP server. On Vercel projects, the Vercel CLI (signed in, project linked) adds CDN and Speed Insights data, and Vercel's plugin skills (`react-best-practices` and others) add rule-level detail; both are optional. Constraints needs Node.js 18 or later and git for its floor guard; the tools for each quality dimension are installed in the target project only when you pick that dimension.
+
 Clone this repository and register its skill directories:
 
 ```sh
@@ -77,7 +83,7 @@ git clone https://github.com/pixel-perfectionist/agent-skills.git
 cd agent-skills
 
 mkdir -p "$HOME/.agents/skills" "$HOME/.claude/skills"
-for skill_name in crossfire ai-ping-pong domain-language pragmatic-engineering pr-feedback release-notes user-flows; do
+for skill_name in crossfire ai-ping-pong domain-language pragmatic-engineering pr-feedback release-notes user-flows code-simplify performance-optimization webperf constraints; do
   for skills_directory in "$HOME/.agents/skills" "$HOME/.claude/skills"; do
     skill_target="$skills_directory/$skill_name"
     if [ -e "$skill_target" ] || [ -L "$skill_target" ]; then
@@ -87,10 +93,19 @@ for skill_name in crossfire ai-ping-pong domain-language pragmatic-engineering p
     fi
   done
 done
+
+# Claude Code subagent used by Web Performance Audit
+mkdir -p "$HOME/.claude/agents"
+agent_target="$HOME/.claude/agents/web-performance-auditor.md"
+if [ -e "$agent_target" ] || [ -L "$agent_target" ]; then
+  printf 'Keeping existing agent: %s\n' "$agent_target"
+else
+  ln -s "$PWD/skills/webperf/agents/web-performance-auditor.md" "$agent_target"
+fi
 )
 ```
 
-Keep the clone at that location while using these links. The commands skip existing skills with the same names; inspect and back up those skills before replacing them. Start a new host session if the skills are not discovered immediately.
+Keep the clone at that location while using these links. The commands skip existing skills and agents with the same names; inspect and back up those before replacing them. In particular, earlier copies of `code-simplification`, `constraint-driven-development`, or `/code-simplify`, `/webperf`, and `/constraints` command files from the original pack overlap with the adapted skills; remove them so each command has one definition. Start a new host session if the skills are not discovered immediately.
 
 For CLI setup, see the [Codex CLI documentation](https://developers.openai.com/codex/cli/) and [Claude Code setup documentation](https://code.claude.com/docs/en/setup).
 
@@ -192,6 +207,61 @@ $user-flows Map the user flows of this app and what our tests must cover before 
 
 It asks which surfaces to cover and where the document goes before writing anything. Journeys are named the way a user would say them and start from every entry point. Inconsistencies found on the way are recorded as open questions, not fixed, and the skill does not write the tests. A site behind single sign-on is not scraped; the report says what was walked and what was only read from code. See the [procedure](skills/user-flows/SKILL.md), the [document template](skills/user-flows/references/document-template.md), and the [helper scripts](skills/user-flows/references/scripts.md).
 
+## Adapted skills
+
+Code Simplify, Performance Optimization, Web Performance Audit, and Constraints are adapted from [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (MIT, © 2025 Addy Osmani). Each folder carries the MIT license with the original copyright notice. The originals are written to work with any coding agent; these versions are rewritten for Claude Code, on the principle that a skill should add what the model does not already do rather than restate what it does:
+
+- **Cut:** textbook examples and checklists the model already applies, and points repeated across "rationalizations", "red flags", and "verification" sections. Each rule is now stated once, with its reason.
+- **Fixed:** instructions that conflicted with Claude Code's defaults (committing after each step, splitting refactors into separate pull requests), references to skills and commands from the original pack that do not exist here, and outdated tools (Time to Interactive, `bundlesize`).
+- **Added:** measurements the agent runs itself instead of asking a person to click through a profiler; a read-only subagent for audits; Claude Code hooks and a permission rule that enforce the quality bar during the session; and the floor guard as a tested script with a hook mode that matches Claude Code's exit-code contract.
+
+Parts that rely on Claude Code features are marked in each skill. In Codex, the written guidance and scripts still apply; hooks, permission rules, and subagent forking do not.
+
+### Code Simplify
+
+```text
+# In Claude Code
+/code-simplify src/billing
+
+# In Codex
+$code-simplify Simplify the code changed on this branch without changing behavior.
+```
+
+A behavior-preserving pass over the current changes or a given scope. Before removing code it checks callers and the history of those lines; a test that would need to change counts as a behavior change and stops the edit; uncovered code gets a characterization test or only tool-verified transformations. It complements Claude Code's built-in `/simplify` and is explicit-only, so ordinary refactoring requests do not activate it. See the [skill](skills/code-simplify/SKILL.md).
+
+### Performance Optimization
+
+Activates on performance work: a budget, a reported slowdown, slow queries, cache or pool trouble. The [skill](skills/performance-optimization/SKILL.md) holds the measure, change one thing, re-measure, keep-or-revert loop and the non-obvious rules (query plans before indexes, cache keys that include the viewer, pool exhaustion signatures). Worked fixes are in [optimization patterns](skills/performance-optimization/references/optimization-patterns.md) and the per-area audit list in the [checklist](skills/performance-optimization/references/performance-checklist.md).
+
+For Next.js, React, and Vercel projects it also loads a [stack profile](skills/performance-optimization/references/nextjs-vercel.md), checked against Next.js 16.4 and React 19. The profile adds that stack's measurements: Turbopack bundle snapshots with `next analyze export`, `x-vercel-cache` results, `vercel metrics`, and Speed Insights field data. It also covers the culprits that matter at audit level, such as nonce-based CSP forcing every page dynamic, a broad `proxy.ts` matcher, `'use client'` high in the tree, and `priority` deprecated on `next/image`. For code-level rules it defers to Vercel's `react-best-practices` and `next-bundle-optimizer` skills by rule ID rather than copying them.
+
+### Web Performance Audit
+
+```text
+# In Claude Code
+/webperf http://localhost:3000 report.json
+
+# In Codex
+$webperf Audit this app's performance.
+```
+
+In Claude Code the skill forks into the [`web-performance-auditor`](skills/webperf/agents/web-performance-auditor.md) subagent, which cannot edit files and preloads Performance Optimization. It fills the scorecard only from measured data, labeled lab or field, and otherwise marks it `not measured` and tags findings as potential impact. It does not start your app: give it a URL that answers or Lighthouse, PageSpeed Insights, CrUX, or trace files. See the [skill](skills/webperf/SKILL.md).
+
+### Constraints
+
+```text
+# In Claude Code
+/constraints
+/constraints check
+/constraints guard
+/constraints ratchet
+
+# In Codex
+$constraints Set up a quality bar for this repository.
+```
+
+Setup detects the stack, asks at most four questions with defaults, writes `CONSTRAINTS.md`, installs the de facto tool for each chosen dimension, and wires Claude Code: `@CONSTRAINTS.md` imported from CLAUDE.md, fast checks after each edit, the floor guard when Claude finishes a turn, and an `ask` rule so Claude cannot change the bar without your approval. See the [skill](skills/constraints/SKILL.md) and the [floor guard reference](skills/constraints/references/floor-guard.md).
+
 ## AI ping pong models and reasoning
 
 | Side | Default model ID | How the review runs |
@@ -271,6 +341,12 @@ The User Flows helpers have 8 offline tests covering label matching, step valida
 node --test skills/user-flows/scripts/flows.test.mjs
 ```
 
+The Constraints floor guard has 11 offline tests that build throwaway git repositories and cover each detection, the exemption for prose files and the guard's own source, threshold loosening and tightening, and both exit-code modes, including the `stop_hook_active` retry path.
+
+```sh
+node --test skills/constraints/scripts/floor-guard.test.mjs
+```
+
 ```text
 skills/
   crossfire/
@@ -314,6 +390,30 @@ skills/
     scripts/check_mermaid.mjs  Render every Mermaid block and fail on errors
     scripts/lib/             Browser adapter and pure helpers
     scripts/flows.test.mjs
+  code-simplify/
+    SKILL.md                 Explicitly requested behavior-preserving simplification
+    LICENSE                  MIT, original and adaptation notices
+    agents/openai.yaml       Explicit-only Codex discovery metadata
+  performance-optimization/
+    SKILL.md                 Measure, change one thing, keep or revert
+    LICENSE
+    agents/openai.yaml       Codex discovery metadata
+    references/optimization-patterns.md
+    references/performance-checklist.md
+    references/nextjs-vercel.md  Stack profile for Next.js, React, and Vercel
+  webperf/
+    SKILL.md                 Forks the audit into the auditor subagent
+    LICENSE
+    agents/openai.yaml       Codex discovery metadata
+    agents/web-performance-auditor.md  Claude Code subagent (link into ~/.claude/agents)
+  constraints/
+    SKILL.md                 Set up, check, guard, and ratchet the quality bar
+    LICENSE
+    agents/openai.yaml       Codex discovery metadata
+    references/setup.md      CONSTRAINTS.md template, defaults, and tools by dimension
+    references/floor-guard.md  Guard contract, exit codes, and adaptation
+    scripts/floor-guard.mjs  Diff-scoped floor guard with a Claude Code hook mode
+    scripts/floor-guard.test.mjs
 docs/
   research.md                Annotated research references
 ```

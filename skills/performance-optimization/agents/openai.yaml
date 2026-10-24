@@ -1,0 +1,4 @@
+interface:
+  display_name: "Performance Optimization"
+  short_description: "Measure first, keep only what beats the baseline"
+  default_prompt: "Use $performance-optimization to measure this slowdown, find the bottleneck, and fix it with before and after numbers."

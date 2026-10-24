@@ -1,0 +1,4 @@
+interface:
+  display_name: "Constraints"
+  short_description: "Write the quality bar down and keep it from slipping"
+  default_prompt: "Use $constraints to set up CONSTRAINTS.md for this repository and enforce it."
