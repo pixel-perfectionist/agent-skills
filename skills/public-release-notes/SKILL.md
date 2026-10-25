@@ -203,8 +203,10 @@ It stops both servers, drops the clone database and deletes the browser profile.
 Copy `references/entry-template.mdx`. Formal register; UI labels exactly as
 rendered; glossary terms; no PR numbers, endpoints, hosts, code names, customer
 or people names; a fix describes the new behaviour, never the flaw. `published`
-is the merge date of the feature's last PR, and the file name starts with that
-same date (the guard fails a mismatch). `module` is the Company Module the
+is the day you write the note (owner decision 2026-10-22), and the file name
+starts with that same date; the guard fails a mismatch and a new note dated more
+than 7 days back. A note PR that waits in review for more than a week is
+re-dated before it merges. `module` is the Company Module the
 feature needs, a `code` from `backend/apps/companies/fixtures/modules.json`, or
 `none` when every Company has it; the Release Note Announcement skips Companies
 without that Module. A feature held off in Production by a backend environment
